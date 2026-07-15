@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircraft Directory — Planedle</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <h1 class="logo">PLANEDLE</h1>
+        <p class="tagline">Military aircraft directory — WW2 to the modern era</p>
+        <nav class="site-nav">
+            <a href="index.html">Daily Game</a>
+            <a href="directory.html" class="active">Aircraft Directory</a>
+        </nav>
+    </header>
+
+    <main class="dir-wrap">
+        <section class="dir-controls">
+            <input type="text" id="search-input" placeholder="Search name or manufacturer…">
+            <select id="sort-select">
+                <option value="name-asc">Name (A–Z)</option>
+                <option value="name-desc">Name (Z–A)</option>
+                <option value="year-asc">First flight (oldest first)</option>
+                <option value="year-desc">First flight (newest first)</option>
+                <option value="era">Era (WW2 → Modern)</option>
+                <option value="type">Type</option>
+                <option value="country">Country</option>
+            </select>
+            <select id="era-filter">
+                <option value="">All eras</option>
+            </select>
+            <select id="type-filter">
+                <option value="">All types</option>
+            </select>
+            <select id="country-filter">
+                <option value="">All countries</option>
+            </select>
+            <button id="clear-filters" class="secondary-btn">Clear</button>
+        </section>
+
+        <p id="result-count" class="result-count"></p>
+        <section id="aircraft-grid" class="aircraft-grid"></section>
+    </main>
+
+    <footer class="site-footer">
+        <p>Add photos to the <strong>images/</strong> folder — filenames are listed in
+            <strong>images/image-list.txt</strong>.</p>
+    </footer>
+
+    <script src="js/data.js"></script>
+    <script src="js/directory.js"></script>
+</body>
+
+</html>
