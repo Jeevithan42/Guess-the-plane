@@ -1,0 +1,5 @@
+# Code-paste companion files (workflow scratch copies)
+*.txt
+
+# ...but keep the image filename reference
+!images/image-list.txt
