@@ -1,6 +1,6 @@
 # Planedle — Guess the Plane
 
-A Wordle-inspired daily military aircraft guessing game plus a browsable directory of 73 major military aircraft from WW2 to the modern era. Plain HTML/CSS/JS — no build step, no server needed.
+A Wordle-inspired daily military aircraft guessing game plus a browsable directory of 74 major military aircraft from WW2 to the modern era. Plain HTML/CSS/JS — no build step, no server needed.
 
 ## Pages
 
