@@ -1,222 +1,619 @@
-﻿/* planedle — shared styles for the game and the directory */
+/* Planedle — shared styles for the game and the directory.
+   Look: tactical aircraft-recognition terminal. Gunmetal and amber, monospace
+   readouts, hard corners, no rounding anywhere by design.
+   Sections: tokens, base, utilities, layout, components, game, directory, responsive. */
+
+/* ============================================================
+   Design tokens
+   ============================================================ */
 
 :root {
-    --bg: #10141c;
-    --panel: #1a2130;
-    --panel-2: #222b3d;
-    --text: #e8ecf4;
-    --muted: #93a0b5;
-    --accent: #4da3ff;
-    --green: #3e9b52;
-    --gray: #3a4356;
-    --red: #d0605e;
-    --radius: 10px;
+    /* Surfaces, from furthest back to closest to the reader. */
+    --color-bg: #0b0e11;
+    --color-well: #05070a;
+    --color-surface: #12161b;
+    --color-surface-raised: #1a2027;
+
+    --color-border: #262d36;
+    --color-border-strong: #39434f;
+
+    --color-text: #ccd4dc;
+    --color-text-dim: #9aa6b2;
+    --color-text-muted: #6b7885;
+    /* Sits on top of --color-accent, so it must stay dark. */
+    --color-text-on-accent: #0b0e11;
+
+    --color-accent: #d99a2b;
+    --color-accent-bright: #f2b544;
+
+    --color-match: #4d7a35;
+    --color-miss: #262d36;
+    --color-win: #8fc45f;
+    --color-loss: #c0463c;
+
+    /* Spacing scale, 0.25rem base. */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-8: 3rem;
+
+    /* Type scale. */
+    --text-xs: 0.6875rem;
+    --text-sm: 0.8125rem;
+    --text-base: 0.9375rem;
+    --text-lg: 1.0625rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 2rem;
+
+    /* Monospace carries the readouts, labels and data; the sans is only for
+       running prose, which is punishing to read in a fixed pitch. */
+    --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+    /* Applied to every uppercase label so they stay uniform. */
+    --tracking-label: 0.14em;
+
+    --width-game: 720px;
+    --width-directory: 1200px;
+
+    --transition: 0.12s ease;
+
+    /* Shared by the board header and every guess row, so the columns
+       of the two can never drift apart. */
+    --board-columns: 2fr 1fr 1fr 1.2fr 0.9fr;
 }
 
-* {
+/* ============================================================
+   Base
+   ============================================================ */
+
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: "segoe ui", system-ui, -apple-system, sans-serif;
+    background-color: var(--color-bg);
+    /* Faint plotting grid behind the panels. */
+    background-image:
+        linear-gradient(rgba(120, 145, 170, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120, 145, 170, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
     line-height: 1.5;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* ---------- header / nav ---------- */
+img {
+    display: block;
+    max-width: 100%;
+}
+
+button,
+input,
+select {
+    font: inherit;
+    color: inherit;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+
+.hidden {
+    display: none !important;
+}
+
+/* Every uppercase micro-label in the UI routes through this. */
+.label,
+.board-header span,
+.chip,
+.mode-tab,
+.site-nav a,
+.classification-bar,
+.stats-box,
+.result-count,
+.card-link {
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+}
+
+/* ============================================================
+   Layout — classification bar, header, nav, page wrappers, footer
+   ============================================================ */
+
+.classification-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-well);
+    border-bottom: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-4);
+}
+
+.classification-bar strong {
+    /* The stamp itself: inverted so it reads as a mark on the page. */
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    padding: 0 var(--space-2);
+    font-weight: 700;
+}
+
+.classification-meta {
+    color: var(--color-text-muted);
+}
 
 .site-header {
     text-align: center;
-    padding: 1.5rem 1rem 1rem;
-    border-bottom: 1px solid var(--panel-2);
+    padding: var(--space-5) var(--space-4) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .logo {
-    font-size: 2.2rem;
+    font-size: var(--text-2xl);
+    font-weight: 700;
     letter-spacing: 0.35em;
-    font-weight: 800;
+    /* letter-spacing adds a trailing gap; pull it back to stay centred. */
+    text-indent: 0.35em;
 }
 
 .tagline {
-    color: var(--muted);
-    margin-top: 0.2rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    margin-top: var(--space-2);
 }
 
 .site-nav {
-    margin-top: 0.9rem;
+    margin-top: var(--space-4);
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
 }
 
 .site-nav a {
-    color: var(--muted);
+    color: var(--color-text-muted);
     text-decoration: none;
-    padding: 0.4rem 1rem;
-    border-radius: var(--radius);
-    margin: 0 0.2rem;
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-border-strong);
+    transition: color var(--transition), border-color var(--transition), background var(--transition);
 }
 
 .site-nav a:hover {
-    color: var(--text);
-    background: var(--panel);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 .site-nav a.active {
-    color: var(--text);
-    background: var(--panel-2);
+    color: var(--color-text-on-accent);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    font-weight: 700;
 }
 
-/* ---------- game page ---------- */
-
-.game-wrap {
+.page {
     width: 100%;
-    max-width: 720px;
     margin: 0 auto;
-    padding: 1.2rem 1rem 3rem;
+    padding: var(--space-5) var(--space-4) var(--space-8);
     flex: 1;
 }
+
+.page-game {
+    max-width: var(--width-game);
+}
+
+.page-directory {
+    max-width: var(--width-directory);
+}
+
+.site-footer {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    padding: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+.site-footer a {
+    color: var(--color-text-dim);
+}
+
+/* ============================================================
+   Components — buttons, fields, media, chips
+   ============================================================ */
+
+.primary-btn,
+.secondary-btn {
+    cursor: pointer;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.primary-btn {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    border: 1px solid var(--color-accent);
+    padding: 0 var(--space-4);
+    font-weight: 700;
+}
+
+.primary-btn:hover:not(:disabled) {
+    background: var(--color-accent-bright);
+    border-color: var(--color-accent-bright);
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    padding: var(--space-2) var(--space-3);
+}
+
+.secondary-btn:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.primary-btn:disabled,
+.secondary-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.field {
+    background: var(--color-well);
+    border: 1px solid var(--color-border-strong);
+    padding: var(--space-2) var(--space-3);
+    caret-color: var(--color-accent);
+}
+
+.field:focus {
+    border-color: var(--color-accent);
+}
+
+.field:disabled {
+    opacity: 0.4;
+}
+
+.field::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* An image that fades in once loaded, with a note in its place until then.
+   Shared by the game's mystery photo and the directory cards. */
+.media {
+    position: relative;
+    background: var(--color-well);
+    overflow: hidden;
+}
+
+.media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.media.is-loaded img {
+    opacity: 1;
+}
+
+.media.is-loaded .media-note {
+    display: none;
+}
+
+.media-note {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+}
+
+.chip {
+    border: 1px solid var(--color-border-strong);
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-dim);
+}
+
+/* ============================================================
+   Game — mode tabs, mystery photo, guess input, board, result
+   ============================================================ */
 
 .mode-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: var(--space-1);
     justify-content: center;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .mode-tab {
-    background: var(--panel);
-    color: var(--muted);
-    border: 1px solid var(--panel-2);
-    border-radius: 999px;
-    padding: 0.4rem 0.9rem;
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-strong);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
     cursor: pointer;
-    font-size: 0.9rem;
+    transition: color var(--transition), border-color var(--transition), background var(--transition);
 }
 
 .mode-tab:hover {
-    color: var(--text);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 .mode-tab.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #0b1220;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-on-accent);
     font-weight: 700;
 }
 
 .game-panel {
-    background: var(--panel);
-    border: 1px solid var(--panel-2);
-    border-radius: var(--radius);
-    padding: 1.2rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    padding: var(--space-5);
 }
 
 .image-frame {
-    position: relative;
-    width: 100%;
     aspect-ratio: 16 / 9;
-    background: #0b0f16;
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 1px solid var(--color-border-strong);
 }
 
-#plane-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: filter 0.5s ease;
+/* Targeting brackets over the four corners of the photo. Eight gradient bars
+   on one pseudo-element — two per corner — so no extra markup is needed. */
+.image-frame::before {
+    content: "";
+    position: absolute;
+    inset: var(--space-2);
+    z-index: 2;
+    pointer-events: none;
+    --bracket-arm: 18px;
+    --bracket-line: 2px;
+    background-image:
+        linear-gradient(var(--color-accent) 0 0), linear-gradient(var(--color-accent) 0 0),
+        linear-gradient(var(--color-accent) 0 0), linear-gradient(var(--color-accent) 0 0),
+        linear-gradient(var(--color-accent) 0 0), linear-gradient(var(--color-accent) 0 0),
+        linear-gradient(var(--color-accent) 0 0), linear-gradient(var(--color-accent) 0 0);
+    background-size:
+        var(--bracket-arm) var(--bracket-line), var(--bracket-line) var(--bracket-arm),
+        var(--bracket-arm) var(--bracket-line), var(--bracket-line) var(--bracket-arm),
+        var(--bracket-arm) var(--bracket-line), var(--bracket-line) var(--bracket-arm),
+        var(--bracket-arm) var(--bracket-line), var(--bracket-line) var(--bracket-arm);
+    background-position:
+        left top, left top,
+        right top, right top,
+        left bottom, left bottom,
+        right bottom, right bottom;
+    background-repeat: no-repeat;
 }
 
-.image-missing {
-    color: var(--muted);
-    text-align: center;
-    padding: 1rem;
+/* The blur amount is set from JS — it shrinks with every guess. */
+.image-frame img {
+    transition: opacity var(--transition), filter 0.5s ease;
 }
 
 .hint-text {
-    color: var(--muted);
-    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
     text-align: center;
-    margin: 0.6rem 0 1rem;
+    margin: var(--space-3) 0 var(--space-4);
 }
-
-/* guess input + autocomplete */
 
 .guess-input-wrap {
     position: relative;
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
 }
 
-#guess-input {
+.guess-input {
     flex: 1;
-    background: var(--panel-2);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 0.65rem 0.9rem;
-    font-size: 1rem;
-}
-
-#guess-input:focus {
-    outline: 2px solid var(--accent);
-}
-
-#guess-input:disabled {
-    opacity: 0.5;
-}
-
-#guess-btn {
-    background: var(--accent);
-    color: #0b1220;
-    border: none;
-    border-radius: var(--radius);
-    padding: 0 1.2rem;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-#guess-btn:hover:not(:disabled) {
-    filter: brightness(1.15);
-}
-
-#guess-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
 }
 
 .suggestions {
     position: absolute;
-    top: calc(100% + 4px);
+    top: 100%;
     left: 0;
     right: 0;
-    background: var(--panel-2);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    list-style: none;
     z-index: 10;
-    max-height: 260px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-accent);
+    border-top: none;
+    list-style: none;
+    max-height: 16rem;
     overflow-y: auto;
+    font-size: var(--text-sm);
 }
 
 .suggestions li {
-    padding: 0.55rem 0.9rem;
+    padding: var(--space-2) var(--space-3);
     cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.suggestions li::before {
+    content: "> ";
+    color: var(--color-accent);
+}
+
+.suggestions li:last-child {
+    border-bottom: none;
 }
 
 .suggestions li:hover {
-    background: var(--accent);
-    color: #0b1220;
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+}
+
+.suggestions li:hover::before {
+    color: var(--color-text-on-accent);
+}
+
+.board-header,
+.guess-row {
+    display: grid;
+    grid-template-columns: var(--board-columns);
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
+}
+
+.board-header {
+    border-bottom: 1px solid var(--color-border-strong);
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.board-header span {
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    text-align: center;
+}
+
+.cell {
+    border: 1px solid var(--color-border);
+    padding: var(--space-2) var(--space-1);
+    font-size: var(--text-sm);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell-match {
+    background: var(--color-match);
+    border-color: var(--color-match);
+    font-weight: 700;
+}
+
+.cell-miss {
+    background: var(--color-miss);
+}
+
+.cell-empty {
+    background: transparent;
+    border-style: dashed;
+    min-height: 2.25rem;
+}
+
+.result-box {
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-strong);
+    border-left: 3px solid var(--color-accent);
+    padding: var(--space-4);
+    margin-top: var(--space-4);
+    text-align: center;
+}
+
+.result-box h2 {
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    margin-bottom: var(--space-3);
+}
+
+.result-box p {
+    margin-bottom: var(--space-2);
+}
+
+/* Running prose is the one place the fixed pitch hurts. */
+.result-desc,
+.card-desc {
+    font-family: var(--font-sans);
+}
+
+.result-win {
+    color: var(--color-win);
+}
+
+.result-loss {
+    color: var(--color-loss);
+}
+
+.result-meta {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+}
+
+.result-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.result-links a {
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+}
+
+.game-footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+}
+
+.stats-box {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
 }
 
 .shake {
@@ -227,264 +624,167 @@ body {
 
     0%,
     100% {
-        transform: translatex(0);
+        transform: translateX(0);
     }
 
     25% {
-        transform: translatex(-6px);
+        transform: translateX(-6px);
     }
 
     75% {
-        transform: translatex(6px);
+        transform: translateX(6px);
     }
 }
 
-/* guess board */
-
-.board-header,
-.guess-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.2fr 0.9fr;
-    gap: 0.35rem;
-    margin-bottom: 0.35rem;
-}
-
-.board-header span {
-    color: var(--muted);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    text-align: center;
-}
-
-.cell {
-    border-radius: 6px;
-    padding: 0.5rem 0.3rem;
-    font-size: 0.8rem;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cell-match {
-    background: var(--green);
-    font-weight: 700;
-}
-
-.cell-miss {
-    background: var(--gray);
-}
-
-.cell-empty {
-    background: var(--panel-2);
-    min-height: 2.1rem;
-}
-
-/* result + stats */
-
-.result-box {
-    background: var(--panel-2);
-    border-radius: var(--radius);
-    padding: 1rem;
-    margin-top: 1rem;
-    text-align: center;
-}
-
-.result-box h2 {
-    font-size: 1.15rem;
-    margin-bottom: 0.5rem;
-}
-
-.result-win {
-    color: #6fd287;
-}
-
-.result-loss {
-    color: var(--red);
-}
-
-.result-box p {
-    margin-bottom: 0.5rem;
-}
-
-.result-meta {
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-.result-box a {
-    color: var(--accent);
-    display: inline-block;
-    margin: 0.3rem 0.6rem 0.3rem 0;
-}
-
-.game-footer-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-
-.stats-box {
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-.secondary-btn {
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    padding: 0.45rem 0.9rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.secondary-btn:hover {
-    border-color: var(--accent);
-}
-
-/* ---------- directory page ---------- */
-
-.dir-wrap {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.2rem 1rem 3rem;
-    flex: 1;
-}
+/* ============================================================
+   Directory — controls and aircraft cards
+   ============================================================ */
 
 .dir-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.8rem;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
 }
 
-.dir-controls input[type="text"] {
-    flex: 2 1 220px;
-    background: var(--panel-2);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 0.55rem 0.9rem;
-    font-size: 0.95rem;
+.dir-search {
+    flex: 2 1 14rem;
 }
 
-.dir-controls select {
-    flex: 1 1 150px;
-    background: var(--panel-2);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 0.55rem 0.6rem;
-    font-size: 0.9rem;
+.dir-filter {
+    flex: 1 1 9rem;
+    font-size: var(--text-sm);
 }
 
 .result-count {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-bottom: 0.8rem;
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-3);
 }
 
 .aircraft-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-3);
+    /* Feeds the REC-nn stamp on each card; renumbers as filters change. */
+    counter-reset: record;
 }
 
 .plane-card {
-    background: var(--panel);
-    border: 1px solid var(--panel-2);
-    border-radius: var(--radius);
-    overflow: hidden;
+    position: relative;
+    counter-increment: record;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
     display: flex;
     flex-direction: column;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: border-color var(--transition);
 }
 
-.plane-card:hover {
-    transform: translatey(-3px);
-    border-color: var(--accent);
+.plane-card::before {
+    content: "REC-" counter(record, decimal-leading-zero);
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    background: var(--color-well);
+    border-left: 1px solid var(--color-border-strong);
+    border-bottom: 1px solid var(--color-border-strong);
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-label);
+    padding: 0 var(--space-2);
 }
 
+.plane-card:hover,
 .plane-card.highlight {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent);
+    border-color: var(--color-accent);
 }
 
-.card-img {
-    width: 100%;
+.card-media {
     aspect-ratio: 16 / 9;
-    object-fit: cover;
-    background: #0b0f16;
-}
-
-.img-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: 0.85rem;
-    text-align: center;
+    border-bottom: 1px solid var(--color-border-strong);
 }
 
 .card-body {
-    padding: 0.85rem 0.95rem 1rem;
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .card-body h3 {
-    font-size: 1.05rem;
-    margin-bottom: 0.15rem;
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .card-maker {
-    color: var(--muted);
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-}
-
-.chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-bottom: 0.55rem;
-}
-
-.chip {
-    background: var(--panel-2);
-    border-radius: 999px;
-    padding: 0.15rem 0.6rem;
-    font-size: 0.72rem;
-    color: var(--muted);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    margin-bottom: var(--space-2);
 }
 
 .card-desc {
-    font-size: 0.85rem;
-    color: #c6cedd;
+    font-size: var(--text-sm);
+    color: var(--color-text-dim);
+    margin-bottom: var(--space-3);
+    flex: 1;
 }
 
-/* ---------- footer ---------- */
-
-.site-footer {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.8rem;
-    padding: 1.2rem;
-    border-top: 1px solid var(--panel-2);
+.card-link {
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    text-decoration: none;
+    align-self: flex-start;
+    border-bottom: 1px solid transparent;
 }
 
-@media (max-width: 520px) {
-    .logo {
-        font-size: 1.6rem;
+.card-link:hover {
+    border-bottom-color: var(--color-accent);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 32.5rem) {
+    :root {
+        --text-2xl: 1.5rem;
+        --tracking-label: 0.08em;
+    }
+
+    .game-panel {
+        padding: var(--space-3);
+    }
+
+    .classification-bar {
+        justify-content: center;
+        text-align: center;
     }
 
     .cell {
-        font-size: 0.68rem;
-        padding: 0.45rem 0.15rem;
+        font-size: var(--text-xs);
+        padding: var(--space-2) var(--space-1);
+    }
+
+    .image-frame::before {
+        --bracket-arm: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

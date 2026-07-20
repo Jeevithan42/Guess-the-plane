@@ -1,13 +1,13 @@
-// Planedle - aircraft directory page to sort filter and browse types of aircrafts
-// Requires js/data.js (the list of aircraft) to be actually loaded in in the first place
+// Planedle — aircraft directory page to sort, filter and browse types of aircraft.
+// Requires js/data.js (the AIRCRAFT array) and js/images.js to be loaded first.
 
 (function () {
     "use strict";
     const $ = id => document.getElementById(id);
     const ERA_ORDER = { "WW2": 0, "Cold War": 1, "Modern": 2 };
 
-    function uniqueSorted(feild) {
-        return [...new Set(AIRCRAFT.map(p => p[feild]))].sort();
+    function uniqueSorted(field) {
+        return [...new Set(AIRCRAFT.map(p => p[field]))].sort();
     }
 
     function populateFilter(selectID, values) {
@@ -47,23 +47,40 @@
         return list;
     }
 
+    // The photo comes from the plane's Wikipedia article. Calls made while the
+    // grid is being built share one batched request (see js/images.js).
+    function buildMedia(p) {
+        const media = document.createElement("div");
+        media.className = "media card-media";
+
+        const img = document.createElement("img");
+        img.alt = p.name;
+        img.loading = "lazy";
+
+        const note = document.createElement("p");
+        note.className = "media-note";
+        note.textContent = "Acquiring imagery…";
+
+        media.append(img, note);
+
+        PlaneImages.get(p.wiki).then(url => {
+            if (!url) {
+                note.textContent = "No imagery on file";
+                return;
+            }
+            img.onload = () => media.classList.add("is-loaded");
+            img.onerror = () => { note.textContent = "Imagery feed failed"; };
+            img.src = url;
+        });
+
+        return media;
+    }
+
     function buildCard(p) {
         const card = document.createElement("article");
         card.className = "plane-card";
         card.id = p.id;
 
-        const img = document.createElement("img");
-        img.className = "card-img";
-        img.alt = p.name;
-        img.loading = "lazy";
-        img.src = p.image;
-
-        img.addEventListener("error", () => {
-            const ph = document.createElement("div");
-            ph.className = "card-img img-placeholder";
-            ph.innerHTML = "No photo yet<br><small>add " + p.image + "</small>";
-            img.replaceWith(ph);
-        })
         const body = document.createElement("div");
         body.className = "card-body";
 
@@ -87,8 +104,15 @@
         desc.className = "card-desc";
         desc.textContent = p.description;
 
-        body.append(h, maker, chips, desc);
-        card.append(img, body);
+        const link = document.createElement("a");
+        link.className = "card-link";
+        link.href = PlaneImages.articleUrl(p.wiki);
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "Source: Wikipedia ↗";
+
+        body.append(h, maker, chips, desc, link);
+        card.append(buildMedia(p), body);
         return card;
     }
 
@@ -97,7 +121,7 @@
         grid.innerHTML = "";
         const list = currentList();
         $("result-count").textContent =
-            list.length + " of " + AIRCRAFT.length + " aircraft shown";
+            "◆ " + list.length + " of " + AIRCRAFT.length + " records returned";
         list.forEach(p => grid.appendChild(buildCard(p)));
     }
 

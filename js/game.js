@@ -1,5 +1,5 @@
 ﻿// Planedle — Wordle-inspired daily military aircraft guessing game.
-// Requires js/data.js (the AIRCRAFT array) to be loaded first.
+// Requires js/data.js (the AIRCRAFT array) and js/images.js to be loaded first.
 
 (function () {
     "use strict";
@@ -130,19 +130,51 @@
         });
     }
 
+    // Bumped on every render, so a slow photo for a mode we have since left
+    // can't paint over the current one.
+    let imageToken = 0;
+
+    // Start heavily blurred; sharpen with each guess; reveal when the game ends.
+    function blurFor() {
+        return finished ? 0 : Math.max(2, 16 - guesses.length * 3);
+    }
+
     function renderImage() {
+        const frame = $("image-frame");
         const img = $("plane-image");
-        const missing = $("image-missing");
-        missing.classList.add("hidden");
-        img.classList.remove("hidden");
-        img.onerror = function () {
-            img.classList.add("hidden");
-            missing.classList.remove("hidden");
-        };
-        img.src = answer.image;
-        // Start heavily blurred; sharpen with each guess; reveal when the game ends.
-        const blur = finished ? 0 : Math.max(2, 16 - guesses.length * 3);
-        img.style.filter = "blur(" + blur + "px)";
+        const note = $("image-note");
+        const plane = answer;
+
+        img.style.filter = "blur(" + blurFor() + "px)";
+
+        // Between guesses the plane is unchanged and only the blur moves, so
+        // leave the loaded photo alone rather than re-fetching and flashing it.
+        if (img.dataset.planeId === plane.id) return;
+
+        const token = ++imageToken;
+        frame.classList.remove("is-loaded");
+        img.removeAttribute("src");
+        delete img.dataset.planeId;
+        note.textContent = "Acquiring imagery…";
+
+        PlaneImages.get(plane.wiki).then(url => {
+            if (token !== imageToken) return;
+            if (!url) {
+                note.textContent = "Imagery feed unavailable · " +
+                    "check connection and reload";
+                return;
+            }
+            img.onload = () => {
+                if (token !== imageToken) return;
+                img.dataset.planeId = plane.id;
+                frame.classList.add("is-loaded");
+            };
+            img.onerror = () => {
+                if (token !== imageToken) return;
+                note.textContent = "Imagery feed failed";
+            };
+            img.src = url;
+        });
     }
 
     function cellClass(match) {
@@ -225,10 +257,12 @@
 
         const heading = document.createElement("h2");
         heading.className = won ? "result-win" : "result-loss";
-        heading.textContent = won ? "Correct! It's the " + answer.name + " 🎉"
-            : "Out of guesses — it was the " + answer.name + ".";
+        heading.textContent = won
+            ? "◆ Identification confirmed · " + answer.name
+            : "◆ Identification failed · subject was the " + answer.name;
 
         const desc = document.createElement("p");
+        desc.className = "result-desc";
         desc.textContent = answer.description;
 
         const meta = document.createElement("p");
@@ -240,33 +274,45 @@
         box.appendChild(desc);
         box.appendChild(meta);
 
-        const link = document.createElement("a");
-        link.href = "directory.html#" + answer.id;
-        link.textContent = "View in the directory →";
-        box.appendChild(link);
+        const links = document.createElement("div");
+        links.className = "result-links";
+
+        const dirLink = document.createElement("a");
+        dirLink.href = "directory.html#" + answer.id;
+        dirLink.textContent = "Open registry record →";
+        links.appendChild(dirLink);
+
+        const wikiLink = document.createElement("a");
+        wikiLink.href = PlaneImages.articleUrl(answer.wiki);
+        wikiLink.target = "_blank";
+        wikiLink.rel = "noopener";
+        wikiLink.textContent = "Source: Wikipedia ↗";
+        links.appendChild(wikiLink);
 
         if (!mode.practice) {
             const share = document.createElement("button");
             share.className = "secondary-btn";
-            share.textContent = "Share result 📋";
+            share.textContent = "Copy report 📋";
             share.addEventListener("click", () => {
                 navigator.clipboard.writeText(shareText()).then(() => {
                     share.textContent = "Copied!";
-                    setTimeout(() => { share.textContent = "Share result 📋"; }, 1500);
+                    setTimeout(() => { share.textContent = "Copy report 📋"; }, 1500);
                 });
             });
-            box.appendChild(share);
+            links.appendChild(share);
         }
+
+        box.appendChild(links);
     }
 
     function renderStats() {
         const el = $("stats-box");
         if (mode.practice) {
-            el.textContent = "Practice mode — nothing is saved, guess as many planes as you like.";
+            el.textContent = "Training mode · no record retained · unlimited attempts";
             return;
         }
         const s = loadStats();
-        el.textContent = "Played " + s.played + " · Won " + s.wins +
+        el.textContent = "Sorties " + s.played + " · Confirmed " + s.wins +
             " · Streak " + s.streak + " · Best " + s.best;
     }
 

@@ -5,23 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aircraft Directory — Planedle</title>
+    <link rel="preconnect" href="https://upload.wikimedia.org">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
+    <div class="classification-bar">
+        <span><strong>Classified</strong></span>
+        <span class="classification-meta">Aircraft Identification Division · Airframe Registry</span>
+        <span class="classification-meta">74 Records On File</span>
+    </div>
+
     <header class="site-header">
         <h1 class="logo">PLANEDLE</h1>
-        <p class="tagline">Military aircraft directory — WW2 to the modern era</p>
+        <p class="tagline">Airframe registry — WW2 to the modern era</p>
         <nav class="site-nav">
             <a href="index.html">Daily Game</a>
             <a href="directory.html" class="active">Aircraft Directory</a>
         </nav>
     </header>
 
-    <main class="dir-wrap">
+    <main class="page page-directory">
         <section class="dir-controls">
-            <input type="text" id="search-input" placeholder="Search name or manufacturer…">
-            <select id="sort-select">
+            <input type="text" id="search-input" class="field dir-search"
+                placeholder="Query designation or manufacturer…">
+            <select id="sort-select" class="field dir-filter">
                 <option value="name-asc">Name (A–Z)</option>
                 <option value="name-desc">Name (Z–A)</option>
                 <option value="year-asc">First flight (oldest first)</option>
@@ -30,13 +38,13 @@
                 <option value="type">Type</option>
                 <option value="country">Country</option>
             </select>
-            <select id="era-filter">
+            <select id="era-filter" class="field dir-filter">
                 <option value="">All eras</option>
             </select>
-            <select id="type-filter">
+            <select id="type-filter" class="field dir-filter">
                 <option value="">All types</option>
             </select>
-            <select id="country-filter">
+            <select id="country-filter" class="field dir-filter">
                 <option value="">All countries</option>
             </select>
             <button id="clear-filters" class="secondary-btn">Clear</button>
@@ -47,11 +55,12 @@
     </main>
 
     <footer class="site-footer">
-        <p>Add photos to the <strong>images/</strong> folder — filenames are listed in
-            <strong>images/image-list.txt</strong>.</p>
+        <p>Imagery and reference material sourced from <a href="https://en.wikipedia.org/" target="_blank"
+                rel="noopener">Wikipedia</a>.</p>
     </footer>
 
     <script src="js/data.js"></script>
+    <script src="js/images.js"></script>
     <script src="js/directory.js"></script>
 </body>
 
