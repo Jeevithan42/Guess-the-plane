@@ -27,3 +27,8 @@ No images are kept in this repo. Each plane in `js/data.js` carries a `wiki` fie
 
 Photos are contributed by Wikipedia editors under their own licences; both pages credit Wikipedia in the footer and link to each plane's article.
 
+## AI use
+
+AI was usewd to generate some of the code for some of the more advanced CSS as I am new to it, however it was still typed out by hand for a lot of it. AI was also used to debug and set up Wikepedia API and using images from the web instead of locally stored images.
+
+For the game itself AI was used to generate the blurring and unblurring of the image. 
